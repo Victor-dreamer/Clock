@@ -8,8 +8,16 @@
           v-bind:style="{transform: 'translate(-50%, 0) rotate('+miaoDeg+'deg)'}"
           @mousedown="mouseDown(1)"
         ></span>
-        <span class="fen" v-bind:style="{transform: 'translate(-50%, 0) rotate('+fenDeg+'deg)'}"  @mousedown="mouseDown(2)"></span>
-        <span class="shi" v-bind:style="{transform: 'translate(-50%, 0) rotate('+shiDeg+'deg)'}"  @mousedown="mouseDown(3)"></span>
+        <span
+          class="fen"
+          v-bind:style="{transform: 'translate(-50%, 0) rotate('+fenDeg+'deg)'}"
+          @mousedown="mouseDown(2)"
+        ></span>
+        <span
+          class="shi"
+          v-bind:style="{transform: 'translate(-50%, 0) rotate('+shiDeg+'deg)'}"
+          @mousedown="mouseDown(3)"
+        ></span>
       </div>
       <div class="time">
         <div class="digital-time">
@@ -45,11 +53,9 @@ export default {
   data() {
     return {
       // date: new Date(),
-      time: {
-        hour: 0,
-        minute: 0,
-        second: 0
-      },
+      hour: 0,
+      minute: 0,
+      second: 0,
       timerID: "",
       isMouseDown: 0,
       haveChanged: 0
@@ -58,24 +64,58 @@ export default {
   computed: {
     // 根据时间值计算对应的角度
     miaoDeg: function() {
-      return this.time.second * 6;
+      return this.second * 6;
     },
     fenDeg: function() {
-      return this.time.minute * 6 + this.time.second * 0.1;
+      return this.minute * 6 + this.second * 0.1;
     },
     shiDeg: function() {
-      return this.time.minute * 0.5 + this.time.hour * 30;
+      return this.minute * 0.5 + this.hour * 30;
     },
-    showSecond: function(){
-      return this.zeroPadding(this.time.second,2);
+    // 补充0之后展示时间
+    showSecond: function() {
+      return this.zeroPadding(this.second, 2);
     },
-    showMinute: function(){
-      return this.zeroPadding(this.time.minute,2);
+    showMinute: function() {
+      return this.zeroPadding(this.minute, 2);
     },
-    showHour: function(){
-      return this.zeroPadding(this.time.hour,2);
+    showHour: function() {
+      return this.zeroPadding(this.hour, 2);
     }
   },
+
+  watch: {
+    // 侦听时间的变化
+    minute: function(val) {
+      // console.log(val);
+      if (val >= 60) {
+        this.minute = val-60;
+        this.hour++;
+      }else if(val < 0){
+        this.minute = val+60;
+        this.hour--;
+      }
+    },
+    second: function(val) {
+      // console.log(val);
+      if (val >= 60) {
+        this.second = val-60;
+        this.minute++;
+      }else if(val < 0){
+        this.second = val+60;
+        this.minute--;
+      }
+    },
+    hour: function(val) {
+      // console.log(val);
+      if (val >= 24) {
+        this.hour = val-24;
+      }else if(val < 0){
+        this.hour = val+24;
+      }
+    }
+  },
+
   mounted() {
     this.addMarks();
     this.updateTime();
@@ -97,80 +137,56 @@ export default {
     // 更新时间
     updateTime() {
       let cd = new Date();
-      this.time = {
-        hour: cd.getHours(),
-        minute: cd.getMinutes(),
-        second: cd.getSeconds()
-      };
+      (this.hour = cd.getHours()),
+        (this.minute = cd.getMinutes()),
+        (this.second = cd.getSeconds());
     },
 
-    // 时间改变后对各个时间进行进制调整
-    afterChangeTime() {
-      let s = parseInt(this.time.second);
-      let m = parseInt(this.time.minute);
-      let h = parseInt(this.time.hour);
-      if (s >= 60) {
-        s = 0;
-        m++;
-      } else if (s < 0) {
-        s = s + 60;
-        m--;
-      }
-      if (m >= 60) {
-        m = 0;
-        h++;
-      } else if (m < 0) {
-        m = m + 60;
-        h--;
-      }
-      if (h >= 24) {
-        h = 0;
-      } else if (h < 0) {
-        h = h + 24;
-      }
-      this.time = {
-        hour: h,
-        minute: m,
-        second: s,
-      };
-    },
-
-    // 修改时间
+    // 按钮修改时间
     changeTime(time, tag) {
-      const this_ = this;
-      let s = parseInt(this_.time.second);
-      let m = parseInt(this_.time.minute);
-      let h = parseInt(this_.time.hour);
-      this_.isChange();
+      let s = parseInt(this.second);
+      let m = parseInt(this.minute);
+      let h = parseInt(this.hour);
+
+      // 时间修改后使用不同的计时方式
+      if (this.haveChanged == 0) {
+        clearInterval(this.timerID);
+        this.timerID = setInterval(() => {
+          this.changeTime(1, 1);
+        }, 1000);
+        // console.log("使用按钮改变过时间！")
+        this.haveChanged = 1;
+      }
+      // 根据参数判断时间的更改
       if (tag == 1) {
         switch (time) {
           case 1:
-            this_.time.second = s + 1;
-            this_.afterChangeTime();
+            this.second = s + 1;
+            // this.afterChangeTime();
             break;
           case 2:
-            this_.time.minute = m + 1;
-            this_.afterChangeTime();
+            this.minute = m + 1;
+            // this.afterChangeTime();
             break;
           case 3:
-            this_.time.hour = h + 1;
-            this_.afterChangeTime();
+            this.hour = h + 1;
+            // this.afterChangeTime();
             break;
         }
       }
       if (tag == 0) {
         switch (time) {
           case 1:
-            this_.time.second = s - 1;
-            this_.afterChangeTime();
+            this.second = s - 1;
+            // this.afterChangeTime();
             break;
           case 2:
-            this_.time.minute = m - 1;
-            this_.afterChangeTime();
+            this.minute = m - 1;
+            // this.afterChangeTime();
             break;
           case 3:
-            this_.time.hour = h - 1;
-            this_.afterChangeTime();
+            this.hour = h - 1;
+            // this.afterChangeTime();
             break;
         }
       }
@@ -185,26 +201,14 @@ export default {
       return (zero + num).slice(-digit);
     },
 
-    //按钮点击事件
-    isChange() {
-      const this_ = this;
-      if (this_.haveChanged == 0) {
-        clearInterval(this_.timerID);
-        this_.timerID = setInterval(function() {
-          this_.changeTime(1, 1);
-        }, 1000);
-        this_.haveChanged = 1;
-      }
-    },
-
-    // 获取鼠标转动角度
+    // 获取鼠标在四象限上的位置角度
     getAngle(px, py, mx, my) {
-      var x = Math.abs(px - mx);
-      var y = Math.abs(py - my);
-      var z = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-      var cos = y / z;
-      var radina = Math.acos(cos); //用反三角函数求弧度
-      var angle = Math.floor(180 / (Math.PI / radina)); //将弧度转换成角度
+      let x = Math.abs(px - mx);
+      let y = Math.abs(py - my);
+      let z = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+      let cos = y / z;
+      let radina = Math.acos(cos); //用反三角函数求弧度
+      let angle = Math.floor(180 / (Math.PI / radina)); //将弧度转换成角度
       if (mx > px && my > py) {
         //鼠标在第四象限
         angle = 180 - angle;
@@ -232,29 +236,47 @@ export default {
       return angle;
     },
 
-    // 指针转动事件
+    // 获取鼠标转动角度
+    getAngle2(px, py, ox, oy, nx, ny) {
+      // 第一条边的平方
+      let n1 =
+        Math.abs(ox - px) * Math.abs(ox - px) +
+        Math.abs(oy - py) * Math.abs(oy - py);
+      let n2 =
+        Math.abs(ox - px) * Math.abs(ox - px) +
+        Math.abs(oy - py) * Math.abs(oy - py);
+      let n3 =
+        Math.abs(ox - nx) * Math.abs(ox - nx) +
+        Math.abs(oy - ny) * Math.abs(oy - ny);
+      let cos = (n1 + n2 - n3) / (2 * Math.sqrt(n1) * Math.sqrt(n2));
+      let radina = Math.acos(cos); //用反三角函数求弧度
+      let angle = Math.floor(180 / (Math.PI / radina)); //将弧度转换成角度
+      return angle;
+    },
+
+    // 鼠标点击指针转动事件
     changePointer(pointer, $event) {
-      const this_ = this;
-      if (this_.isMouseDown == 1) {
+      // const this_ = this;
+      if (this.isMouseDown == 1) {
         //只有鼠标按下时才执行
         // 获取旋转中心坐标
         let p = document.querySelector(".dial");
         let x = p.offsetLeft + p.offsetWidth / 2;
         let y = p.offsetTop + p.offsetHeight / 2;
         // 添加
-        var ang = this_.getAngle(x, y, event.clientX, event.clientY);
+        let ang = this.getAngle(x, y, event.clientX, event.clientY);
         // console.log(ang);
-        console.log(pointer);
+        // console.log(pointer);
         switch (pointer) {
           case 1:
-            this_.time.second = Math.floor(ang / 6);
-            console.log(this_.time.second);
+            this.second = Math.floor(ang / 6);
+            // console.log(this_.time.second);
             break;
           case 2:
-            this_.time.minute = Math.floor(ang / 6);
+            this.minute = Math.floor(ang / 6);
             break;
           case 3:
-            this_.time.hour = Math.floor(ang / 30);
+            this.hour = Math.floor(ang / 30);
             break;
         }
       } else {
@@ -263,28 +285,29 @@ export default {
     },
     // 鼠标按下事件
     mouseDown(p) {
-      const this_ = this
-      this_.isMouseDown = p;
-      clearInterval(this_.timerID);
+      // const this_ = this
+      this.isMouseDown = p;
+      clearInterval(this.timerID);
     },
 
     //获取改变的角度并转化为时间
     changeAngle($event, pointer, x, y) {
-      const this_ = this;
-      let ang = this_.getAngle(x, y, event.clientX, event.clientY);
+      // const this_ = this;
+      let ang = this.getAngle(x, y, event.clientX, event.clientY);
       switch (pointer) {
         case 1:
-          this_.time.second = this_.zeroPadding(Math.floor(ang / 6), 2);
+          this.second = Math.floor(ang / 6);
           break;
         case 2:
-          this_.time.minute = this_.zeroPadding(Math.floor(ang / 6), 2);
+          this.minute = Math.floor(ang / 6);
           break;
         case 3:
-          this_.time.hour = this_.zeroPadding(Math.floor(ang / 30), 2);
+          this.hour = Math.floor(ang / 30);
           break;
       }
     },
 
+    // 鼠标松开事件
     stopChangePointer() {
       // window.removeEventListener("mousemove", this.changeAngle(1));
       this.isMouseDown = 0;
