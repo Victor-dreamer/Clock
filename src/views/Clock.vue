@@ -1,7 +1,7 @@
 <template>
   <div class="main">
     <div id="clock">
-      <div class="dial" @mousemove="changePointer(isMouseDown)" @mouseup="stopChangePointer">
+      <div class="dial" @mousemove="pointerRotate" @mouseup="stopChangePointer">
         <ul id="markList"></ul>
         <span
           class="miao"
@@ -21,25 +21,55 @@
       </div>
       <div class="time">
         <div class="digital-time">
-          <input type="button" value="+" class="digital-time-item" @click="changeTime(3,1)" />
+          <input
+            type="button"
+            value="+"
+            class="digital-time-item"
+            @click="changeTimeByButton(3,1,1)"
+          />
           <span class="digital-time-item">{{ showHour }}</span>
-          <input type="button" value="-" class="digital-time-item" @click="changeTime(3,0)" />
+          <input
+            type="button"
+            value="-"
+            class="digital-time-item"
+            @click="changeTimeByButton(3,1,0)"
+          />
         </div>
         <div class="digital-time">
           <span>:</span>
         </div>
         <div class="digital-time">
-          <input type="button" value="+" class="digital-time-item" @click="changeTime(2,1)" />
+          <input
+            type="button"
+            value="+"
+            class="digital-time-item"
+            @click="changeTimeByButton(2,1,1)"
+          />
           <span class="digital-time-item">{{ showMinute }}</span>
-          <input type="button" value="-" class="digital-time-item" @click="changeTime(2,0)" />
+          <input
+            type="button"
+            value="-"
+            class="digital-time-item"
+            @click="changeTimeByButton(2,1,0)"
+          />
         </div>
         <div class="digital-time">
           <span>:</span>
         </div>
         <div class="digital-time">
-          <input type="button" value="+" class="digital-time-item" @click="changeTime(1,1)" />
+          <input
+            type="button"
+            value="+"
+            class="digital-time-item"
+            @click="changeTimeByButton(1,1,1)"
+          />
           <span class="digital-time-item">{{ showSecond }}</span>
-          <input type="button" value="-" class="digital-time-item" @click="changeTime(1,0)" />
+          <input
+            type="button"
+            value="-"
+            class="digital-time-item"
+            @click="changeTimeByButton(1,1,0),afterChangeTime"
+          />
         </div>
         <!-- <p class="time">{{ time }}</p> -->
       </div>
@@ -58,29 +88,31 @@ export default {
       second: 0,
       timerID: "",
       isMouseDown: 0,
-      haveChanged: 0
+      haveChanged: 0,
+      pointerX: 0,
+      pointerY: 0
     };
   },
   computed: {
     // 根据时间值计算对应的角度
     miaoDeg: function() {
-      return this.second * 6;
+      return parseInt(this.second) * 6;
     },
     fenDeg: function() {
-      return this.minute * 6 + this.second * 0.1;
+      return parseInt(this.minute) * 6 + parseInt(this.second) * 0.1;
     },
     shiDeg: function() {
-      return this.minute * 0.5 + this.hour * 30;
+      return parseInt(this.minute) * 0.5 + parseInt(this.hour) * 30;
     },
     // 补充0之后展示时间
     showSecond: function() {
-      return this.zeroPadding(this.second, 2);
+      return this.zeroPadding(parseInt(this.second), 2);
     },
     showMinute: function() {
-      return this.zeroPadding(this.minute, 2);
+      return this.zeroPadding(parseInt(this.minute), 2);
     },
     showHour: function() {
-      return this.zeroPadding(this.hour, 2);
+      return this.zeroPadding(parseInt(this.hour), 2);
     }
   },
 
@@ -89,29 +121,29 @@ export default {
     minute: function(val) {
       // console.log(val);
       if (val >= 60) {
-        this.minute = val-60;
+        this.minute = val - 60;
         this.hour++;
-      }else if(val < 0){
-        this.minute = val+60;
+      } else if (val < 0) {
+        this.minute = val + 60;
         this.hour--;
       }
     },
     second: function(val) {
       // console.log(val);
       if (val >= 60) {
-        this.second = val-60;
+        this.second = val - 60;
         this.minute++;
-      }else if(val < 0){
-        this.second = val+60;
+      } else if (val < 0) {
+        this.second = val + 60;
         this.minute--;
       }
     },
     hour: function(val) {
       // console.log(val);
       if (val >= 24) {
-        this.hour = val-24;
-      }else if(val < 0){
-        this.hour = val+24;
+        this.hour = val - 24;
+      } else if (val < 0) {
+        this.hour = val + 24;
       }
     }
   },
@@ -137,59 +169,63 @@ export default {
     // 更新时间
     updateTime() {
       let cd = new Date();
-      (this.hour = cd.getHours()),
-        (this.minute = cd.getMinutes()),
-        (this.second = cd.getSeconds());
+      this.hour = cd.getHours();
+      this.minute = cd.getMinutes();
+      this.second = cd.getSeconds();
     },
 
-    // 按钮修改时间
-    changeTime(time, tag) {
-      let s = parseInt(this.second);
-      let m = parseInt(this.minute);
-      let h = parseInt(this.hour);
-
-      // 时间修改后使用不同的计时方式
-      if (this.haveChanged == 0) {
-        clearInterval(this.timerID);
-        this.timerID = setInterval(() => {
-          this.changeTime(1, 1);
-        }, 1000);
-        // console.log("使用按钮改变过时间！")
-        this.haveChanged = 1;
-      }
+    // 修改时间
+    changeTime(p, time, tag) {
+      let s = this.second;
+      let m = this.minute;
+      let h = this.hour;
       // 根据参数判断时间的更改
       if (tag == 1) {
-        switch (time) {
+        switch (p) {
           case 1:
-            this.second = s + 1;
+            this.second = s + time;
             // this.afterChangeTime();
             break;
           case 2:
-            this.minute = m + 1;
+            this.minute = m + time;
             // this.afterChangeTime();
             break;
           case 3:
-            this.hour = h + 1;
+            this.hour = h + time;
             // this.afterChangeTime();
             break;
         }
       }
       if (tag == 0) {
-        switch (time) {
+        switch (p) {
           case 1:
-            this.second = s - 1;
+            this.second = s - time;
             // this.afterChangeTime();
             break;
           case 2:
-            this.minute = m - 1;
+            this.minute = m - time;
             // this.afterChangeTime();
             break;
           case 3:
-            this.hour = h - 1;
+            this.hour = h - time;
             // this.afterChangeTime();
             break;
         }
       }
+    },
+
+    // 按钮修改时间
+    changeTimeByButton(p, time, tag) {
+      if (this.haveChanged == 0) {
+        clearInterval(this.timerID);
+        this.timerID = setInterval(() => {
+          this.changeTime(1, 1, 1);
+        }, 1000);
+        // console.log("使用按钮改变过时间！")
+        this.haveChanged = 1;
+      }
+      this.changeTime(p, time, tag);
+      // this.haveChanged = 1;
     },
 
     // 补充0
@@ -290,21 +326,85 @@ export default {
       clearInterval(this.timerID);
     },
 
-    //获取改变的角度并转化为时间
-    changeAngle($event, pointer, x, y) {
-      // const this_ = this;
-      let ang = this.getAngle(x, y, event.clientX, event.clientY);
-      switch (pointer) {
-        case 1:
-          this.second = Math.floor(ang / 6);
-          break;
-        case 2:
-          this.minute = Math.floor(ang / 6);
-          break;
-        case 3:
-          this.hour = Math.floor(ang / 30);
-          break;
+    //获取旋转角度并判断正负
+    pointerRotate(e) {
+      // 获取钟表中心位置
+      let p = document.querySelector(".dial");
+      let x = p.offsetLeft + p.offsetWidth / 2;
+      let y = p.offsetTop + p.offsetHeight / 2;
+      let ang;
+      // 判断按下
+      let md = this.isMouseDown;
+      if (md != 0) {
+        /* 
+          1.分离角度，并判断正负
+          2.根据角度再修改时间，注意时的角度与分秒不同
+        */
+        // 旧坐标
+        var oldang = this.getAngle(x, y, this.pointerX, this.pointerY);
+        // 新坐标
+        var newang = this.getAngle(x, y, e.clientX, e.clientY);
+        // 判断临界情况
+        if (
+          clock.pointerY >= y &&
+          e.clientY >= y &&
+          clock.pointerX >= x &&
+          e.clientX < x
+        ) {
+          // 鼠标跨越0刻度，判断减少
+          ang = this.getAngle2(
+            x,
+            y,
+            clock.pointerX,
+            clock.pointerY,
+            e.clientX,
+            e.clientY
+          );
+          ang = 0 - ang;
+          // this.changeTime(md, ang / 6, 0);
+          // console.log(ang);
+          // console.log("减少"+Math.floor(ang / 6)+"秒");
+        } else if (
+          clock.pointerY >= y &&
+          e.clientY >= y &&
+          clock.pointerX < x &&
+          e.clientX >= x
+        ) {
+          ang = this.getAngle2(
+            x,
+            y,
+            clock.pointerX,
+            clock.pointerY,
+            e.clientX,
+            e.clientY
+          );
+          // console.log(ang);
+          // this.changeTime(md, ang / 6, 1);
+          // console.log("增加"+Math.floor(ang / 6)+"秒");
+        } else {
+          ang = newang - oldang;
+          // console.log(ang);
+        }
+        if (ang > 0) {
+          if (md == 3) {
+            this.changeTime(md, ang / 30, 1);
+          }else {
+            this.changeTime(md, ang / 6, 1);
+          }
+          // console.log("增加"+Math.floor(ang / 6)+"秒");
+        }
+        if (ang < 0) {
+          ang = 0 - ang;
+          if (md == 3) {
+            this.changeTime(md, ang / 30, 1);
+          }else {
+            this.changeTime(md, ang / 6, 0);
+          }
+          // console.log("减少"+Math.floor(ang / 6)+"秒");
+        }
       }
+      this.pointerX = e.clientX;
+      this.pointerY = e.clientY;
     },
 
     // 鼠标松开事件
