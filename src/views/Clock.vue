@@ -290,7 +290,7 @@ export default {
       return angle;
     },
 
-    // 鼠标点击指针转动事件
+    /* 鼠标点击指针转动事件
     changePointer(pointer, $event) {
       // const this_ = this;
       if (this.isMouseDown == 1) {
@@ -318,7 +318,8 @@ export default {
       } else {
         // 不做任何事
       }
-    },
+    }, */
+
     // 鼠标按下事件
     mouseDown(p) {
       // const this_ = this
@@ -396,7 +397,7 @@ export default {
         if (ang < 0) {
           ang = 0 - ang;
           if (md == 3) {
-            this.changeTime(md, ang / 30, 1);
+            this.changeTime(md, ang / 30, 0);
           }else {
             this.changeTime(md, ang / 6, 0);
           }
