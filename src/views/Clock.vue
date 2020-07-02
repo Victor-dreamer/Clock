@@ -321,10 +321,12 @@ export default {
     }, */
 
     // 鼠标按下事件
-    mouseDown (p) {
+    mouseDown (p, $event) {
       // const this_ = this
       this.isMouseDown = p
       clearInterval(this.timerID)
+      this.pointerX = event.clientX
+      this.pointerY = event.clientY
     },
 
     //  获取旋转角度并判断正负
@@ -342,49 +344,17 @@ export default {
           2.根据角度再修改时间，注意时的角度与分秒不同
         */
         // 旧坐标
-        var oldang = this.getAngle(x, y, this.pointerX, this.pointerY)
+        let oldang = this.getAngle(x, y, this.pointerX, this.pointerY)
         // 新坐标
-        var newang = this.getAngle(x, y, e.clientX, e.clientY)
+        let newang = this.getAngle(x, y, e.clientX, e.clientY)
         // 判断临界情况
-        if (
-          this.pointerY >= y &&
-          e.clientY >= y &&
-          this.pointerX >= x &&
-          e.clientX < x
-        ) {
-          // 鼠标跨越0刻度，判断减少
-          ang = this.getAngle2(
-            x,
-            y,
-            this.pointerX,
-            this.pointerY,
-            e.clientX,
-            e.clientY
-          )
-          ang = 0 - ang
-          // this.changeTime(md, ang / 6, 0);
-          // console.log(ang);
-          // console.log("减少"+Math.floor(ang / 6)+"秒");
-        } else if (
-          this.pointerY >= y &&
-          e.clientY >= y &&
-          this.pointerX < x &&
-          e.clientX >= x
-        ) {
-          ang = this.getAngle2(
-            x,
-            y,
-            this.pointerX,
-            this.pointerY,
-            e.clientX,
-            e.clientY
-          )
-          // console.log(ang);
-          // this.changeTime(md, ang / 6, 1);
-          // console.log("增加"+Math.floor(ang / 6)+"秒");
-        } else {
-          ang = newang - oldang
-          // console.log(ang);
+        ang = newang - oldang
+        // console.log('角度改变：' + ang)
+        if (ang < -350) {
+          ang = 360 + ang
+        }
+        if (ang > 350) {
+          ang = ang - 360
         }
         if (ang > 0) {
           if (md === 3) {
@@ -403,9 +373,9 @@ export default {
           }
           // console.log("减少"+Math.floor(ang / 6)+"秒");
         }
+        this.pointerX = e.clientX
+        this.pointerY = e.clientY
       }
-      this.pointerX = e.clientX
-      this.pointerY = e.clientY
     },
 
     // 鼠标松开事件
